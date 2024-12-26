@@ -121,17 +121,33 @@ const Dashboard = () => {
             </Link>
           )}
 
-          {/* My Events Card */}
-          <Link
-            to="/my-events"
-            className="group relative bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow duration-200 flex flex-col items-center justify-center text-center"
-          >
-            <Calendar className="h-12 w-12 text-indigo-600 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900">My Events</h3>
-            <p className="mt-2 text-sm text-gray-500">
-              View and manage your event proposals
-            </p>
-          </Link>
+          {/* My Events Card - For club representatives */}
+          {userInfo?.role === "club_representative" && (
+            <Link
+              to="/my-events"
+              className="group relative bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow duration-200 flex flex-col items-center justify-center text-center"
+            >
+              <Calendar className="h-12 w-12 text-indigo-600 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900">My Events</h3>
+              <p className="mt-2 text-sm text-gray-500">
+                View and manage your event proposals
+              </p>
+            </Link>
+          )}
+
+          {/* Proposed Events Card - For OCA staff */}
+          {userInfo?.role === "oca_staff" && (
+            <Link
+              to="/my-events"
+              className="group relative bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow duration-200 flex flex-col items-center justify-center text-center"
+            >
+              <FileText className="h-12 w-12 text-primary mb-4" />
+              <h3 className="text-lg font-medium text-gray-900">Proposed Events</h3>
+              <p className="mt-2 text-sm text-gray-500">
+                Review and manage event proposals
+              </p>
+            </Link>
+          )}
 
           {/* Calendar Card */}
           <div className="group relative bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow duration-200 flex flex-col items-center justify-center text-center">

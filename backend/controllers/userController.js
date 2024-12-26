@@ -271,15 +271,22 @@ export const getProposalsByUser = async (req, res) => {
     const proposals = await EventProposal.find({ submittedBy: userId })
       .sort('-createdAt');
 
+    if (!proposals) {
+      return res.status(404).json({
+        success: false,
+        message: "No proposals found for this user"
+      });
+    }
+
     res.status(200).json({
       success: true,
       data: proposals
     });
   } catch (error) {
-    console.error("Error fetching proposals:", error);
+    console.error("Error in getProposalsByUser:", error); // Add logging
     res.status(500).json({
       success: false,
-      message: "Failed to fetch proposals",
+      message: "Failed to fetch user proposals",
       error: error.message
     });
   }
@@ -346,6 +353,93 @@ export const getProposalById = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to fetch proposal",
+      error: error.message
+    });
+  }
+};
+
+// Add to userController.js
+
+// Get all pending proposals for OCA staff
+export const getPendingProposals = async (req, res) => {
+  try {
+    const proposals = await EventProposal.find({ status: "pending" })
+      .populate('submittedBy', 'name email')
+      .sort('-createdAt');
+
+    res.status(200).json({
+      success: true,
+      data: proposals
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch pending proposals",
+      error: error.message
+    });
+  }
+};
+
+// Update proposal status with comment
+export const reviewProposal = async (req, res) => {
+  try {
+    const { proposalId } = req.params;
+    const { status, comment } = req.body;
+
+    const updatedProposal = await EventProposal.findByIdAndUpdate(
+      proposalId,
+      { 
+        status,
+        comment,
+        reviewedAt: new Date()
+      },
+      { new: true }
+    );
+
+    if (!updatedProposal) {
+      return res.status(404).json({
+        success: false,
+        message: "Proposal not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Proposal ${status} successfully`,
+      data: updatedProposal
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to review proposal",
+      error: error.message
+    });
+  }
+};
+
+// Get all proposals for OCA staff
+export const getAllProposals = async (req, res) => {
+  try {
+    const proposals = await EventProposal.find()
+      .populate('submittedBy', 'name email')
+      .sort('-createdAt');
+
+    if (!proposals) {
+      return res.status(404).json({
+        success: false,
+        message: "No proposals found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: proposals
+    });
+  } catch (error) {
+    console.error("Error in getAllProposals:", error); // Add logging
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch proposals",
       error: error.message
     });
   }

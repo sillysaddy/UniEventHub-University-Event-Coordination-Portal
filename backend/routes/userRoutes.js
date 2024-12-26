@@ -9,8 +9,11 @@ import {
   updateRoleRequest,
   createProposal,
   getProposalsByUser,
-  updateProposal, // Add this import
-  getProposalById // Add this import
+  updateProposal,
+  getProposalById,
+  getPendingProposals,
+  reviewProposal,
+  getAllProposals
 } from "../controllers/userController.js";
 
 const router = express.Router();
@@ -21,11 +24,13 @@ router.post("/login", loginUser);
 router.post("/create-admin", createSystemAdmin);
 
 // Proposal routes
+router.get("/proposals/all", getAllProposals);
+router.get("/proposals/pending", getPendingProposals);
 router.post("/proposals/create", createProposal);
 router.get("/proposals/user/:userId", getProposalsByUser);
-router.patch("/proposals/:proposalId", updateProposal);
-// Add this route to get a single proposal
 router.get("/proposals/:proposalId", getProposalById);
+router.patch("/proposals/:proposalId", updateProposal);
+router.patch("/proposals/:proposalId/review", reviewProposal);
 
 // Profile and role routes
 router.get("/profile/:userId", getUserProfile);

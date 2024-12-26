@@ -43,6 +43,14 @@ const eventProposalSchema = new mongoose.Schema(
       type: Date,
       required: [true, "End date is required"],
     },
+    comment: {
+      type: String,
+      default: null
+    },
+    reviewedAt: {
+      type: Date,
+      default: null
+    }
   },
   {
     timestamps: true,
