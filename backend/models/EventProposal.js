@@ -16,6 +16,14 @@ const eventProposalSchema = new mongoose.Schema(
       required: [true, "Budget is required"],
       min: [0, "Budget cannot be negative"],
     },
+    allocatedBudget: {
+      type: Number,
+      default: 0
+    },
+    sponsorRequirement: {
+      type: Number,
+      default: 0
+    },
     clubName: {
       type: String,
       required: [true, "Club name is required"],
@@ -50,7 +58,18 @@ const eventProposalSchema = new mongoose.Schema(
     reviewedAt: {
       type: Date,
       default: null
-    }
+    },
+    needsRevision: {
+      type: Boolean,
+      default: false
+    },
+    revisionHistory: [{
+      comment: String,
+      timestamp: {
+        type: Date,
+        default: Date.now
+      }
+    }]
   },
   {
     timestamps: true,

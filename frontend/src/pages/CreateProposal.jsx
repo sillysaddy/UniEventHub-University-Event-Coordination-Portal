@@ -101,52 +101,71 @@ const CreateProposal = () => {
     return true;
   };
 
+  const validateForm = () => {
+    if (!formData.title?.trim()) {
+      setError("Title is required");
+      return false;
+    }
+    if (!formData.description?.trim()) {
+      setError("Description is required");
+      return false;
+    }
+    if (!formData.clubName?.trim()) {
+      setError("Club name is required");
+      return false;
+    }
+    if (!formData.budget || isNaN(parseFloat(formData.budget)) || parseFloat(formData.budget) < 0) {
+      setError("Please enter a valid budget amount");
+      return false;
+    }
+    if (!formData.startDate || !formData.endDate) {
+      setError("Both start and end dates are required");
+      return false;
+    }
+    return validateDates();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    if (!validateDates()) {
+    if (!validateForm()) {
       setLoading(false);
       return;
     }
 
     try {
       const userId = localStorage.getItem("userId");
-      const formDataToSend = new FormData();
-      
-      // Append all form fields
-      Object.keys(formData).forEach(key => {
-        if (key === 'documents' && formData[key]) {
-          formDataToSend.append('documents', formData[key]);
-        } else {
-          formDataToSend.append(key, formData[key]);
-        }
-      });
-      formDataToSend.append('submittedBy', userId);
+      if (!userId) {
+        setError("User not authenticated");
+        setLoading(false);
+        return;
+      }
+
+      // Create proposal data
+      const proposalData = {
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        budget: parseFloat(formData.budget),
+        clubName: formData.clubName.trim(),
+        startDate: new Date(formData.startDate).toISOString(),
+        endDate: new Date(formData.endDate).toISOString(),
+        submittedBy: userId
+      };
 
       let response;
       if (id) {
         // Update existing proposal
         response = await axios.patch(
           `http://localhost:5001/api/users/proposals/${id}`,
-          formDataToSend,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          }
+          proposalData
         );
       } else {
         // Create new proposal
         response = await axios.post(
           "http://localhost:5001/api/users/proposals/create",
-          formDataToSend,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          }
+          proposalData
         );
       }
 
@@ -157,8 +176,8 @@ const CreateProposal = () => {
         }, 2000);
       }
     } catch (err) {
+      console.error("Proposal submission error:", err.response?.data || err);
       setError(err.response?.data?.message || `Failed to ${id ? 'update' : 'submit'} proposal`);
-      console.error("Proposal submission error:", err);
     } finally {
       setLoading(false);
     }

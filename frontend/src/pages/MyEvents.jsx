@@ -12,6 +12,8 @@ const MyEvents = () => {
   const [userRole, setUserRole] = useState("");
   const [reviewComment, setReviewComment] = useState("");
   const [selectedProposal, setSelectedProposal] = useState(null);
+  const [allocatedBudget, setAllocatedBudget] = useState(''); // Change from 0 to empty string
+  const [reviewAction, setReviewAction] = useState("need_revision");
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -48,7 +50,7 @@ const MyEvents = () => {
   }, [navigate]);
 
   const getStatusColor = (status) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case "approved":
         return "text-green-600";
       case "rejected":
@@ -59,7 +61,7 @@ const MyEvents = () => {
   };
 
   const getStatusIcon = (status) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case "approved":
         return <CheckCircle className="h-5 w-5" />;
       case "rejected":
@@ -96,21 +98,48 @@ const MyEvents = () => {
     }
   };
 
-  const handleProposalAction = async (proposalId, status) => {
+  // Add this function to handle refreshing events
+  const refreshEvents = async () => {
+    try {
+      const userId = localStorage.getItem("userId");
+      const userResponse = await axios.get(`http://localhost:5001/api/users/profile/${userId}`);
+      
+      let response;
+      if (userResponse.data.data.role === "oca_staff") {
+        response = await axios.get("http://localhost:5001/api/users/proposals/all");
+      } else {
+        response = await axios.get(`http://localhost:5001/api/users/proposals/user/${userId}`);
+      }
+      
+      if (response.data.success) {
+        setEvents(response.data.data);
+      }
+    } catch (err) {
+      console.error("Error refreshing events:", err);
+    }
+  };
+
+  // Update handleProposalAction function
+  const handleProposalAction = async (proposalId) => {
     try {
       const response = await axios.patch(
         `http://localhost:5001/api/users/proposals/${proposalId}/review`,
         {
-          status,
-          comment: reviewComment
+          status: reviewAction === "need_revision" ? "pending" : reviewAction,
+          comment: reviewComment,
+          allocatedBudget: reviewAction === "approve" ? (parseFloat(allocatedBudget) || 0) : 0,
+          sponsorRequirement: reviewAction === "approve" ? 
+            (selectedProposal.budget - (parseFloat(allocatedBudget) || 0)) : 0,
+          needsRevision: reviewAction === "need_revision"
         }
       );
 
       if (response.data.success) {
-        // Remove the processed proposal from the list
-        setEvents(events.filter(event => event._id !== proposalId));
+        await refreshEvents(); // Refresh the events list
         setSelectedProposal(null);
         setReviewComment("");
+        setAllocatedBudget(''); // Reset to empty string
+        setReviewAction("need_revision");
       }
     } catch (err) {
       setError("Failed to update proposal status");
@@ -166,7 +195,9 @@ const MyEvents = () => {
                     <h3 className="text-lg font-medium text-gray-900">{event.title}</h3>
                     <div className={`flex items-center ${getStatusColor(event.status)}`}>
                       {getStatusIcon(event.status)}
-                      <span className="ml-2 text-sm capitalize">{event.status}</span>
+                      <span className="ml-2 text-sm capitalize">
+                        {event.status.toLowerCase() === "approve" ? "approved" : event.status}
+                      </span>
                     </div>
                   </div>
 
@@ -189,6 +220,27 @@ const MyEvents = () => {
                       <Clock className="h-4 w-4 mr-2" />
                       <span>Submitted on {new Date(event.createdAt).toLocaleDateString()}</span>
                     </div>
+                  </div>
+
+                  {/* Budget Information */}
+                  <div className="mt-4 space-y-2">
+                    <div className="flex items-center text-sm text-gray-500">
+                      <DollarSign className="h-4 w-4 mr-2" />
+                      <span>Total Budget: {event.budget} BDT</span>
+                    </div>
+                    
+                    {event.status === "approved" && (
+                      <>
+                        <div className="flex items-center text-sm text-green-500">
+                          <DollarSign className="h-4 w-4 mr-2" />
+                          <span>OCA Allocated: {event.allocatedBudget} BDT</span>
+                        </div>
+                        <div className="flex items-center text-sm text-blue-500">
+                          <DollarSign className="h-4 w-4 mr-2" />
+                          <span>Sponsor Required: {event.sponsorRequirement} BDT</span>
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {event.status === "pending" && (
@@ -219,6 +271,15 @@ const MyEvents = () => {
                     <div className="p-4 border-t">
                       <p className="text-sm text-gray-600">
                         <strong>Review Comment:</strong> {event.comment}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Revision Status */}
+                  {event.needsRevision && (
+                    <div className="p-4 border-t">
+                      <p className="text-sm text-yellow-600">
+                        <strong>Needs Revision:</strong> {event.comment}
                       </p>
                     </div>
                   )}
@@ -275,35 +336,113 @@ const MyEvents = () => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
           <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
             <h2 className="text-xl font-bold mb-4">Review Proposal</h2>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Review Comment
-              </label>
-              <textarea
-                value={reviewComment}
-                onChange={(e) => setReviewComment(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md"
-                rows={4}
-                placeholder="Enter your review comments..."
-              />
+            
+            <div className="space-y-4 mb-6">
+              {/* Budget Information */}
+              <div>
+                <h3 className="font-medium mb-2">Budget Information</h3>
+                <p className="text-sm text-gray-600">Requested Budget: {selectedProposal.budget} BDT</p>
+              </div>
+
+              {/* Review Comment */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Feedback Comment
+                </label>
+                <textarea
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md"
+                  rows={4}
+                  placeholder="Enter your feedback for the club representative..."
+                />
+              </div>
+
+              {/* Budget Allocation (only show when approving) */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Action
+                </label>
+                <div className="flex items-center space-x-4">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      className="form-radio"
+                      name="action"
+                      value="need_revision"
+                      checked={reviewAction === "need_revision"}
+                      onChange={(e) => setReviewAction(e.target.value)}
+                    />
+                    <span className="ml-2">Request Revision</span>
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      className="form-radio"
+                      name="action"
+                      value="approve"
+                      checked={reviewAction === "approve"}
+                      onChange={(e) => setReviewAction(e.target.value)}
+                    />
+                    <span className="ml-2">Approve</span>
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      className="form-radio"
+                      name="action"
+                      value="reject"
+                      checked={reviewAction === "reject"}
+                      onChange={(e) => setReviewAction(e.target.value)}
+                    />
+                    <span className="ml-2">Reject</span>
+                  </label>
+                </div>
+              </div>
+
+              {reviewAction === "approve" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Budget Allocation (BDT)
+                  </label>
+                  <input
+                    type="text" // Change from number to text
+                    className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    placeholder="Enter amount to allocate"
+                    value={allocatedBudget}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Only allow numbers and empty string
+                      if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                        const numValue = value === '' ? '' : parseFloat(value);
+                        if (value === '' || !isNaN(numValue)) {
+                          if (numValue <= selectedProposal.budget) {
+                            setAllocatedBudget(value);
+                          }
+                        }
+                      }
+                    }}
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Remaining for sponsor: {(selectedProposal.budget - (parseFloat(allocatedBudget) || 0)).toFixed(2)} BDT
+                  </p>
+                </div>
+              )}
             </div>
+
             <div className="flex space-x-4">
               <button
-                onClick={() => handleProposalAction(selectedProposal._id, "approved")}
-                className="flex-1 py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700"
+                onClick={() => handleProposalAction(selectedProposal._id)}
+                className="flex-1 py-2 px-4 bg-primary text-white rounded-md hover:bg-primary/90"
               >
-                Approve
-              </button>
-              <button
-                onClick={() => handleProposalAction(selectedProposal._id, "rejected")}
-                className="flex-1 py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700"
-              >
-                Reject
+                Submit Review
               </button>
               <button
                 onClick={() => {
                   setSelectedProposal(null);
                   setReviewComment("");
+                  setAllocatedBudget(0);
+                  setReviewAction("need_revision");
                 }}
                 className="flex-1 py-2 px-4 border rounded-md"
               >

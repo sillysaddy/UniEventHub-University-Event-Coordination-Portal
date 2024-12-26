@@ -227,6 +227,8 @@ export const updateRoleRequest = async (req, res) => {
 // Add this controller function
 export const createProposal = async (req, res) => {
   try {
+    console.log("Received proposal data:", req.body); // Debug log
+
     const { 
       title, 
       description, 
@@ -237,15 +239,43 @@ export const createProposal = async (req, res) => {
       submittedBy 
     } = req.body;
 
+    // Validate required fields
+    if (!title || !description || !clubName || !startDate || !endDate || !submittedBy) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+        missingFields: {
+          title: !title,
+          description: !description,
+          clubName: !clubName,
+          startDate: !startDate,
+          endDate: !endDate,
+          submittedBy: !submittedBy
+        }
+      });
+    }
+
+    // Parse budget
+    const parsedBudget = Number(budget);
+    if (isNaN(parsedBudget) || parsedBudget < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid budget amount"
+      });
+    }
+
     const newProposal = await EventProposal.create({
-      title,
-      description,
-      budget: Number(budget),
-      clubName,
+      title: title.trim(),
+      description: description.trim(),
+      budget: parsedBudget,
+      clubName: clubName.trim(),
       startDate: new Date(startDate),
       endDate: new Date(endDate),
       submittedBy,
-      status: "pending"
+      status: "pending",
+      needsRevision: false,
+      allocatedBudget: 0,
+      sponsorRequirement: 0
     });
 
     res.status(201).json({
@@ -384,13 +414,27 @@ export const getPendingProposals = async (req, res) => {
 export const reviewProposal = async (req, res) => {
   try {
     const { proposalId } = req.params;
-    const { status, comment } = req.body;
+    const { status, comment, allocatedBudget, sponsorRequirement, needsRevision } = req.body;
+
+    // Normalize the status value and ensure it's not pending when approved
+    const normalizedStatus = status === "approve" ? "approved" : 
+                           status === "reject" ? "rejected" : 
+                           "pending";
 
     const updatedProposal = await EventProposal.findByIdAndUpdate(
       proposalId,
       { 
-        status,
+        status: needsRevision ? "pending" : normalizedStatus,
         comment,
+        allocatedBudget: normalizedStatus === "approved" ? Number(allocatedBudget) || 0 : 0,
+        sponsorRequirement: normalizedStatus === "approved" ? Number(sponsorRequirement) || 0 : 0,
+        needsRevision,
+        $push: {
+          revisionHistory: {
+            comment,
+            timestamp: new Date()
+          }
+        },
         reviewedAt: new Date()
       },
       { new: true }
@@ -403,10 +447,14 @@ export const reviewProposal = async (req, res) => {
       });
     }
 
+    // Immediately fetch and return the updated proposal
+    const refreshedProposal = await EventProposal.findById(proposalId)
+      .populate('submittedBy', 'name email');
+
     res.status(200).json({
       success: true,
-      message: `Proposal ${status} successfully`,
-      data: updatedProposal
+      message: needsRevision ? "Revision requested" : `Proposal ${normalizedStatus} successfully`,
+      data: refreshedProposal
     });
   } catch (error) {
     res.status(500).json({
