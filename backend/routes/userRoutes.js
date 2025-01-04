@@ -13,7 +13,8 @@ import {
   getProposalById,
   getPendingProposals,
   reviewProposal,
-  getAllProposals
+  getAllProposals,
+  downloadReport
 } from "../controllers/userController.js";
 
 const router = express.Router();
@@ -37,5 +38,8 @@ router.get("/profile/:userId", getUserProfile);
 router.post("/role-request", createRoleRequest);
 router.get("/role-requests", getRoleRequests);
 router.patch("/role-request/:requestId", updateRoleRequest);
+
+// Report routes
+router.get("/reports/:filename", downloadReport);
 
 export default router;

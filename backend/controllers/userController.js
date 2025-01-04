@@ -2,6 +2,13 @@ import User from "../models/User.js";
 import RoleChangeRequest from "../models/RoleChangeRequest.js";
 import bcrypt from "bcryptjs";
 import EventProposal from "../models/EventProposal.js"; // Add this import
+import { generateEventApprovalPDF } from '../utils/pdfGenerator.js';
+import path from 'path';
+import fs from 'fs'; // Add this import
+import { fileURLToPath } from 'url'; // Add this import
+
+// Add this near the top of the file with other constants
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const createSystemAdmin = async (req, res) => {
   try {
@@ -414,49 +421,50 @@ export const getPendingProposals = async (req, res) => {
 export const reviewProposal = async (req, res) => {
   try {
     const { proposalId } = req.params;
-    const { status, comment, allocatedBudget, sponsorRequirement, needsRevision } = req.body;
+    const { status, comment, allocatedBudget, sponsorRequirement, needsRevision, ocaOfficerId } = req.body;
 
-    // Normalize the status value and ensure it's not pending when approved
     const normalizedStatus = status === "approve" ? "approved" : 
                            status === "reject" ? "rejected" : 
                            "pending";
 
-    const updatedProposal = await EventProposal.findByIdAndUpdate(
-      proposalId,
-      { 
-        status: needsRevision ? "pending" : normalizedStatus,
-        comment,
-        allocatedBudget: normalizedStatus === "approved" ? Number(allocatedBudget) || 0 : 0,
-        sponsorRequirement: normalizedStatus === "approved" ? Number(sponsorRequirement) || 0 : 0,
-        needsRevision,
-        $push: {
-          revisionHistory: {
-            comment,
-            timestamp: new Date()
-          }
-        },
-        reviewedAt: new Date()
-      },
-      { new: true }
-    );
+    // Get OCA officer details
+    const ocaOfficer = await User.findById(ocaOfficerId);
+    
+    let pdfDetails = null;
+    let updatedFields = {
+      status: needsRevision ? "pending" : normalizedStatus,
+      comment,
+      allocatedBudget: normalizedStatus === "approved" ? Number(allocatedBudget) || 0 : 0,
+      sponsorRequirement: normalizedStatus === "approved" ? Number(sponsorRequirement) || 0 : 0,
+      needsRevision,
+      reviewedBy: ocaOfficerId,
+      reviewedAt: new Date()
+    };
 
-    if (!updatedProposal) {
-      return res.status(404).json({
-        success: false,
-        message: "Proposal not found"
-      });
+    // Generate PDF if proposal is approved
+    if (normalizedStatus === "approved") {
+      pdfDetails = await generateEventApprovalPDF(
+        await EventProposal.findById(proposalId),
+        ocaOfficer
+      );
+      // Add the filename to the update
+      updatedFields.approvalDocument = pdfDetails.filename;
     }
 
-    // Immediately fetch and return the updated proposal
-    const refreshedProposal = await EventProposal.findById(proposalId)
-      .populate('submittedBy', 'name email');
+    const updatedProposal = await EventProposal.findByIdAndUpdate(
+      proposalId,
+      updatedFields,
+      { new: true }
+    ).populate('submittedBy', 'name email')
+     .populate('reviewedBy', 'name userId');
 
     res.status(200).json({
       success: true,
       message: needsRevision ? "Revision requested" : `Proposal ${normalizedStatus} successfully`,
-      data: refreshedProposal
+      data: updatedProposal
     });
   } catch (error) {
+    console.error("Review proposal error:", error);
     res.status(500).json({
       success: false,
       message: "Failed to review proposal",
@@ -464,6 +472,8 @@ export const reviewProposal = async (req, res) => {
     });
   }
 };
+
+
 
 // Get all proposals for OCA staff
 export const getAllProposals = async (req, res) => {
@@ -488,6 +498,39 @@ export const getAllProposals = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to fetch proposals",
+      error: error.message
+    });
+  }
+};
+
+// Add this controller function
+export const downloadReport = async (req, res) => {
+  try {
+    const { filename } = req.params;
+    const filepath = path.join(__dirname, '..', 'uploads', 'reports', filename);
+
+    if (!fs.existsSync(filepath)) {
+      return res.status(404).json({
+        success: false,
+        message: "Report not found"
+      });
+    }
+
+    res.download(filepath, filename, (err) => {
+      if (err) {
+        console.error("Download error:", err);
+        res.status(500).json({
+          success: false,
+          message: "Error downloading file",
+          error: err.message
+        });
+      }
+    });
+  } catch (error) {
+    console.error("Download report error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to download report",
       error: error.message
     });
   }

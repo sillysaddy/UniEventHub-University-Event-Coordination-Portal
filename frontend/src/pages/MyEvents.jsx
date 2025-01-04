@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Calendar, Clock, DollarSign, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Calendar, Clock, DollarSign, CheckCircle, XCircle, AlertCircle, Download } from "lucide-react";
 
 const MyEvents = () => {
   const navigate = useNavigate();
@@ -130,15 +130,16 @@ const MyEvents = () => {
           allocatedBudget: reviewAction === "approve" ? (parseFloat(allocatedBudget) || 0) : 0,
           sponsorRequirement: reviewAction === "approve" ? 
             (selectedProposal.budget - (parseFloat(allocatedBudget) || 0)) : 0,
-          needsRevision: reviewAction === "need_revision"
+          needsRevision: reviewAction === "need_revision",
+          ocaOfficerId: localStorage.getItem("userId")
         }
       );
 
       if (response.data.success) {
-        await refreshEvents(); // Refresh the events list
+        await refreshEvents();
         setSelectedProposal(null);
         setReviewComment("");
-        setAllocatedBudget(''); // Reset to empty string
+        setAllocatedBudget('');
         setReviewAction("need_revision");
       }
     } catch (err) {
@@ -283,6 +284,26 @@ const MyEvents = () => {
                       </p>
                     </div>
                   )}
+
+{/* Download button section */}
+{event.status === "approved" && (
+  <div className="mt-4 border-t pt-4">
+    <button
+      onClick={() => {
+        if (!event.approvalDocument) {
+          alert("Approval document not found. Please contact OCA staff.");
+          return;
+        }
+        const downloadUrl = `http://localhost:5001/api/users/reports/${event.approvalDocument}`;
+        window.open(downloadUrl, '_blank');
+      }}
+      className="w-full py-2 px-4 bg-green-500 text-white rounded-md hover:bg-green-600 flex items-center justify-center gap-2"
+    >
+      <Download className="h-4 w-4" />
+      Download Approval Certificate
+    </button>
+  </div>
+)}
                 </div>
               </div>
             ))}

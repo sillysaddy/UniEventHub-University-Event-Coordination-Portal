@@ -69,7 +69,16 @@ const eventProposalSchema = new mongoose.Schema(
         type: Date,
         default: Date.now
       }
-    }]
+    }],
+    reviewedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null
+    },
+    approvalDocument: {
+      type: String, // This will store the PDF filename
+      default: null
+    }
   },
   {
     timestamps: true,
