@@ -149,6 +149,19 @@ const Dashboard = () => {
             </Link>
           )}
 
+          {/* Advisor Events Card - For advisors */}
+          {userInfo?.role === "advisor" && (
+            <Link
+              to="/advisor/events"
+              className="flex items-center p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
+            >
+              <div className="ml-4">
+                <h3 className="text-lg font-medium text-gray-900">View Approved Events</h3>
+                <p className="text-sm text-gray-500">Access all approved event proposals</p>
+              </div>
+            </Link>
+          )}
+
           {/* Calendar Card */}
           <div className="group relative bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow duration-200 flex flex-col items-center justify-center text-center">
             <Calendar className="h-12 w-12 text-blue-600 mb-4" />
