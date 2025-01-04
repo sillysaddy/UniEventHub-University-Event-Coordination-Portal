@@ -78,7 +78,22 @@ const eventProposalSchema = new mongoose.Schema(
     approvalDocument: {
       type: String, // This will store the PDF filename
       default: null
-    }
+    },
+    advisorComments: [{
+      comment: {
+        type: String,
+        required: true
+      },
+      advisorId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now
+      }
+    }]
   },
   {
     timestamps: true,

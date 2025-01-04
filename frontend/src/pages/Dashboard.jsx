@@ -9,6 +9,7 @@ import {
   Settings,
   Bell
 } from "lucide-react";
+import NotificationPanel from '../components/NotificationPanel';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -152,13 +153,12 @@ const Dashboard = () => {
           {/* Advisor Events Card - For advisors */}
           {userInfo?.role === "advisor" && (
             <Link
-              to="/advisor/events"
-              className="flex items-center p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
+              to="/advisor/events" 
+              className="group relative bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow duration-200 flex flex-col items-center justify-center text-center"
             >
-              <div className="ml-4">
-                <h3 className="text-lg font-medium text-gray-900">View Approved Events</h3>
-                <p className="text-sm text-gray-500">Access all approved event proposals</p>
-              </div>
+              <FileText className="h-12 w-12 text-primary mb-4" />
+              <h3 className="text-lg font-medium text-gray-900">View Approved Events</h3>
+              <p className="mt-2 text-sm text-gray-500">Access all approved event proposals</p>
             </Link>
           )}
 
@@ -179,6 +179,10 @@ const Dashboard = () => {
               Manage your account settings
             </p>
           </div>
+        </div>
+
+        <div className="mt-8">
+          <NotificationPanel userRole={userInfo?.role} />
         </div>
 
         {/* Role Badge */}

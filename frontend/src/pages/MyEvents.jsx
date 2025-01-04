@@ -304,6 +304,21 @@ const MyEvents = () => {
     </button>
   </div>
 )}
+
+{/* Add this after the review comments section */}
+{event.advisorComments && event.advisorComments.length > 0 && (
+  <div className="mt-4 border-t pt-4">
+    <h4 className="text-sm font-medium text-gray-700 mb-2">Advisor Comments</h4>
+    {event.advisorComments.map((comment, index) => (
+      <div key={index} className="mt-2 text-sm bg-blue-50 p-3 rounded">
+        <p className="text-gray-600">{comment.comment}</p>
+        <p className="text-xs text-gray-500 mt-1">
+          {comment.advisorId.name} - {new Date(comment.createdAt).toLocaleString()}
+        </p>
+      </div>
+    ))}
+  </div>
+)}
                 </div>
               </div>
             ))}
