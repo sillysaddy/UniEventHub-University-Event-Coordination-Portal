@@ -8,6 +8,8 @@ import CreateProposal from "./pages/CreateProposal";
 import MyEvents from "./pages/MyEvents";
 import AdvisorDashboard from "./pages/AdvisorDashboard";
 import ProtectedRoute from "./components/ProtectedRoute"; // Add this import
+import SponsorshipTracking from "./pages/SponsorshipTracking"; // Add this import
+import UserManagement from "./pages/UserManagement"; // Add this import
 
 function App() {
   return (
@@ -68,6 +70,22 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={["advisor"]}>
             <AdvisorDashboard />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/sponsorship-tracking" 
+        element={
+          <ProtectedRoute allowedRoles={["club_representative", "oca_staff", "advisor"]}>
+            <SponsorshipTracking />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/admin/users" 
+        element={
+          <ProtectedRoute allowedRoles={["system_admin"]}>
+            <UserManagement />
           </ProtectedRoute>
         } 
       />

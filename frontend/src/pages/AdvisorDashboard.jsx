@@ -221,6 +221,17 @@ const AdvisorDashboard = () => {
                       <Download className="h-4 w-4" />
                       Download Approval Certificate
                     </button>
+                    {/* Add this after the existing download button */}
+                    <button
+                      onClick={() => {
+                        const downloadUrl = `http://localhost:5001/api/users/reports/sponsorship/${event._id}`;
+                        window.open(downloadUrl, '_blank');
+                      }}
+                      className="w-full py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 flex items-center justify-center gap-2 mt-2"
+                    >
+                      <Download className="h-4 w-4" />
+                      Download Sponsorship Report
+                    </button>
                   </div>
                 </div>
               </div>

@@ -6,6 +6,7 @@ import { generateEventApprovalPDF } from '../utils/pdfGenerator.js';
 import path from 'path';
 import fs from 'fs'; // Add this import
 import { fileURLToPath } from 'url'; // Add this import
+import { logActivity } from '../utils/auditLogger.js'; // Add this import
 
 // Add this near the top of the file with other constants
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -63,6 +64,19 @@ export const registerUser = async (req, res) => {
     });
 
     console.log("User created successfully:", newUser._id);
+
+    // Log the activity
+    await logActivity({
+      action: 'USER_CREATE',
+      performedBy: newUser._id,
+      targetUser: newUser._id,
+      details: {
+        email,
+        userId,
+        role: "club_representative"
+      },
+      ipAddress: req.ip
+    });
 
     // Remove password from response
     const { password: _, ...userData } = newUser._doc;

@@ -1,6 +1,15 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
+import { 
+  UserPlus, 
+  Mail, 
+  Lock, 
+  AlertCircle, 
+  Loader2, 
+  ArrowLeft,
+  IdCard
+} from "lucide-react";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -51,89 +60,142 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-lg">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
-            Create your account
-          </h2>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <p className="text-red-500 text-center">{error}</p>
-          )}
-          <div className="rounded-md shadow-sm space-y-4">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                Full Name
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                required
-                value={formData.name}
-                onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-              />
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
+      <div className="w-full max-w-md">
+        {/* Back to Login Link */}
+        <Link 
+          to="/login" 
+          className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-8"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Login
+        </Link>
+
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center h-16 w-16 bg-primary/10 rounded-full mb-4">
+              <UserPlus className="h-8 w-8 text-primary" />
             </div>
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                value={formData.email}
-                onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-              />
-            </div>
-            <div>
-              <label htmlFor="userId" className="block text-sm font-medium text-gray-700">
-                User ID
-              </label>
-              <input
-                id="userId"
-                name="userId"
-                type="text"
-                required
-                value={formData.userId}
-                onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                value={formData.password}
-                onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-              />
-              <p className="mt-1 text-sm text-gray-500">
-                Password must be at least 6 characters long
-              </p>
-            </div>
+            <h2 className="text-2xl font-bold text-gray-900">Create Account</h2>
+            <p className="mt-2 text-sm text-gray-600">
+              Register to start managing university events
+            </p>
           </div>
 
-          <div>
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 flex items-center gap-2 text-red-500 bg-red-50 px-4 py-3 rounded-lg">
+              <AlertCircle className="h-5 w-5 flex-shrink-0" />
+              <span className="text-sm">{error}</span>
+            </div>
+          )}
+
+          {/* Registration Form */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-5">
+              {/* Full Name Field */}
+              <div className="space-y-2">
+                <label htmlFor="name" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  Full Name
+                </label>
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  required
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                  placeholder="Enter your full name"
+                />
+              </div>
+
+              {/* Email Field */}
+              <div className="space-y-2">
+                <label htmlFor="email" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  Email Address
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                  placeholder="Enter your email"
+                />
+              </div>
+
+              {/* User ID Field */}
+              <div className="space-y-2">
+                <label htmlFor="userId" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <IdCard className="h-4 w-4" />
+                  User ID
+                </label>
+                <input
+                  id="userId"
+                  name="userId"
+                  type="text"
+                  required
+                  value={formData.userId}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                  placeholder="Enter your user ID"
+                />
+              </div>
+
+              {/* Password Field */}
+              <div className="space-y-2">
+                <label htmlFor="password" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <Lock className="h-4 w-4" />
+                  Password
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                  placeholder="Create a password"
+                />
+                <p className="text-xs text-gray-500 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  Password must be at least 6 characters long
+                </p>
+              </div>
+            </div>
+
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+              className="w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-lg text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? "Registering..." : "Register"}
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Creating Account...
+                </>
+              ) : (
+                'Create Account'
+              )}
             </button>
-          </div>
-        </form>
+
+            {/* Login Link */}
+            <p className="text-center text-sm text-gray-600">
+              Already have an account?{' '}
+              <Link to="/login" className="font-medium text-primary hover:text-primary/90">
+                Sign in instead
+              </Link>
+            </p>
+          </form>
+        </div>
       </div>
     </div>
   );

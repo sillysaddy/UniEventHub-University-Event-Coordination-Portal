@@ -7,7 +7,8 @@ import {
   FileText, 
   Calendar,
   Settings,
-  Bell
+  Bell,
+  DollarSign
 } from "lucide-react";
 import NotificationPanel from '../components/NotificationPanel';
 
@@ -76,9 +77,6 @@ const Dashboard = () => {
           <div className="flex justify-between items-center py-4">
             <h1 className="text-2xl font-bold text-gray-900">Welcome, {userInfo?.name}</h1>
             <div className="flex items-center space-x-4">
-              <button className="p-2 text-gray-400 hover:text-gray-500">
-                <Bell className="h-6 w-6" />
-              </button>
               <button 
                 onClick={() => {
                   localStorage.removeItem("userId");
@@ -162,23 +160,18 @@ const Dashboard = () => {
             </Link>
           )}
 
-          {/* Calendar Card */}
-          <div className="group relative bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow duration-200 flex flex-col items-center justify-center text-center">
-            <Calendar className="h-12 w-12 text-blue-600 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900">Event Calendar</h3>
+          {/* Sponsorship Tracking Card - For all roles */}
+          <Link
+            to="/sponsorship-tracking"
+            className="group relative bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow duration-200 flex flex-col items-center justify-center text-center"
+          >
+            <DollarSign className="h-12 w-12 text-green-600 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900">Sponsorship Tracking</h3>
             <p className="mt-2 text-sm text-gray-500">
-              View upcoming events and schedules
+              Monitor and track sponsorship activities
             </p>
-          </div>
+          </Link>
 
-          {/* Settings Card */}
-          <div className="group relative bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow duration-200 flex flex-col items-center justify-center text-center">
-            <Settings className="h-12 w-12 text-gray-600 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900">Settings</h3>
-            <p className="mt-2 text-sm text-gray-500">
-              Manage your account settings
-            </p>
-          </div>
         </div>
 
         <div className="mt-8">

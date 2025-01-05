@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Calendar, Clock, DollarSign, CheckCircle, XCircle, AlertCircle, Download } from "lucide-react";
+import SponsorForm from '../components/SponsorForm';
 
 const MyEvents = () => {
   const navigate = useNavigate();
@@ -14,6 +15,11 @@ const MyEvents = () => {
   const [selectedProposal, setSelectedProposal] = useState(null);
   const [allocatedBudget, setAllocatedBudget] = useState(''); // Change from 0 to empty string
   const [reviewAction, setReviewAction] = useState("need_revision");
+  const [showSponsorForm, setShowSponsorForm] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [pendingSponsors, setPendingSponsors] = useState([]);
+  const [selectedSponsor, setSelectedSponsor] = useState(null);
+  const [sponsorReviewComment, setSponsorReviewComment] = useState("");
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -31,6 +37,7 @@ const MyEvents = () => {
         let response;
         if (userResponse.data.data.role === "oca_staff") {
           response = await axios.get("http://localhost:5001/api/users/proposals/all");
+          fetchPendingSponsors();
         } else {
           response = await axios.get(`http://localhost:5001/api/users/proposals/user/${userId}`);
         }
@@ -48,6 +55,15 @@ const MyEvents = () => {
 
     fetchEvents();
   }, [navigate]);
+
+  const fetchPendingSponsors = async () => {
+    try {
+      const response = await axios.get("http://localhost:5001/api/users/sponsors/pending");
+      setPendingSponsors(response.data.data);
+    } catch (error) {
+      console.error("Error fetching pending sponsors:", error);
+    }
+  };
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
@@ -144,6 +160,29 @@ const MyEvents = () => {
       }
     } catch (err) {
       setError("Failed to update proposal status");
+    }
+  };
+
+  const handleSponsorReview = async (sponsorId, status) => {
+    try {
+      const response = await axios.patch(
+        `http://localhost:5001/api/users/sponsors/${sponsorId}/review`,
+        {
+          status,
+          reviewComment: sponsorReviewComment,
+          reviewedBy: localStorage.getItem("userId")
+        }
+      );
+
+      if (response.data.success) {
+        // Refresh both sponsors and events lists
+        fetchPendingSponsors();
+        refreshEvents();
+        setSelectedSponsor(null);
+        setSponsorReviewComment("");
+      }
+    } catch (error) {
+      console.error("Error reviewing sponsor:", error);
     }
   };
 
@@ -305,6 +344,22 @@ const MyEvents = () => {
   </div>
 )}
 
+{/* Add this after the existing download button */}
+{event.status === "approved" && (
+  <div className="mt-2">
+    <button
+      onClick={() => {
+        const downloadUrl = `http://localhost:5001/api/users/reports/sponsorship/${event._id}`;
+        window.open(downloadUrl, '_blank');
+      }}
+      className="w-full py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 flex items-center justify-center gap-2"
+    >
+      <Download className="h-4 w-4" />
+      Download Sponsorship Report
+    </button>
+  </div>
+)}
+
 {/* Add this after the review comments section */}
 {event.advisorComments && event.advisorComments.length > 0 && (
   <div className="mt-4 border-t pt-4">
@@ -319,12 +374,107 @@ const MyEvents = () => {
     ))}
   </div>
 )}
+
+{/* Add Sponsor button */}
+{event.status === "approved" && event.sponsorRequirement > 0 && userRole === "club_representative" && (
+  <div className="mt-4 border-t pt-4">
+    <button
+      onClick={() => {
+        setSelectedEvent(event);
+        setShowSponsorForm(true);
+      }}
+      className="w-full py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+    >
+      Add Sponsor
+    </button>
+  </div>
+)}
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Pending Sponsor Requests Section */}
+      {userRole === "oca_staff" && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-2">
+                <DollarSign className="h-6 w-6 text-primary" />
+                <h2 className="text-2xl font-bold text-gray-900">Pending Sponsor Requests</h2>
+              </div>
+              <span className="px-3 py-1 bg-yellow-100 text-yellow-800 text-sm font-medium rounded-full">
+                {pendingSponsors.length} Pending
+              </span>
+            </div>
+            
+            {pendingSponsors.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="flex justify-center mb-4">
+                  <AlertCircle className="h-12 w-12 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Pending Requests</h3>
+                <p className="text-gray-500">There are no sponsor requests waiting for review.</p>
+              </div>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {pendingSponsors.map((sponsor) => (
+                  <div 
+                    key={sponsor._id} 
+                    className="bg-gray-50 rounded-lg p-6 border border-gray-100 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {sponsor.eventProposal.title}
+                        </h3>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {sponsor.eventProposal.clubName}
+                        </p>
+                      </div>
+                      <span className="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
+                        Pending Review
+                      </span>
+                    </div>
+
+                    <div className="space-y-3 mb-6">
+                      <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                        <span className="text-sm text-gray-600">Sponsor Name</span>
+                        <span className="font-medium">{sponsor.sponsorName}</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                        <span className="text-sm text-gray-600">Offered Amount</span>
+                        <span className="font-medium text-green-600">{sponsor.amount} BDT</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                        <span className="text-sm text-gray-600">Required Amount</span>
+                        <span className="font-medium text-blue-600">
+                          {sponsor.eventProposal.sponsorRequirement} BDT
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-sm text-gray-600">Submitted By</span>
+                        <span className="font-medium">{sponsor.submittedBy.name}</span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setSelectedSponsor(sponsor)}
+                      className="w-full py-2.5 px-4 bg-primary text-white rounded-lg hover:bg-primary/90 
+                                transition-colors duration-200 flex items-center justify-center space-x-2"
+                    >
+                      <CheckCircle className="h-5 w-5" />
+                      <span>Review Request</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {editingProposal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
@@ -484,6 +634,74 @@ const MyEvents = () => {
               >
                 Cancel
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sponsor Form Modal */}
+      {showSponsorForm && selectedEvent && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="max-w-md w-full mx-4">
+            <SponsorForm
+              event={selectedEvent}
+              onSubmit={() => {
+                setShowSponsorForm(false);
+                setSelectedEvent(null);
+                refreshEvents();
+              }}
+              onCancel={() => {
+                setShowSponsorForm(false);
+                setSelectedEvent(null);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Sponsor Review Modal */}
+      {selectedSponsor && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold mb-4">Review Sponsor Request</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Review Comment
+                </label>
+                <textarea
+                  value={sponsorReviewComment}
+                  onChange={(e) => setSponsorReviewComment(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md"
+                  rows={3}
+                  placeholder="Add your review comment..."
+                />
+              </div>
+
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => handleSponsorReview(selectedSponsor._id, 'approved')}
+                  className="flex-1 py-2 px-4 bg-green-500 text-white rounded-md hover:bg-green-600"
+                >
+                  Approve
+                </button>
+                <button
+                  onClick={() => handleSponsorReview(selectedSponsor._id, 'rejected')}
+                  className="flex-1 py-2 px-4 bg-red-500 text-white rounded-md hover:bg-red-600"
+                >
+                  Reject
+                </button>
+                <button
+                  onClick={() => {
+                    setSelectedSponsor(null);
+                    setSponsorReviewComment("");
+                  }}
+                  className="flex-1 py-2 px-4 border rounded-md"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -93,6 +93,10 @@ const eventProposalSchema = new mongoose.Schema(
         type: Date,
         default: Date.now
       }
+    }],
+    sponsors: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Sponsor'
     }]
   },
   {
