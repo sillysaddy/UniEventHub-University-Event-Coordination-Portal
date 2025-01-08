@@ -1,12 +1,12 @@
 import User from "../models/User.js";
 import RoleChangeRequest from "../models/RoleChangeRequest.js";
 import bcrypt from "bcryptjs";
-import EventProposal from "../models/EventProposal.js"; // Add this import
+import EventProposal from "../models/EventProposal.js"; 
 import { generateEventApprovalPDF } from '../utils/pdfGenerator.js';
 import path from 'path';
-import fs from 'fs'; // Add this import
-import { fileURLToPath } from 'url'; // Add this import
-import { logActivity } from '../utils/auditLogger.js'; // Add this import
+import fs from 'fs'; 
+import { fileURLToPath } from 'url'; 
+import { logActivity } from '../utils/auditLogger.js'; 
 
 // Add this near the top of the file with other constants
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

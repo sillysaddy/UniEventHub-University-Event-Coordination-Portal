@@ -50,7 +50,7 @@ const eventProposalSchema = new mongoose.Schema(
     },
     endDate: {
       type: Date,
-      required: [true, "End date is required"],
+      required: [true, "End date is required"], 
     },
     comment: {
       type: String,
@@ -87,7 +87,7 @@ const eventProposalSchema = new mongoose.Schema(
       },
       advisorId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'User', // Reference to User model
         required: true
       },
       createdAt: {
@@ -97,7 +97,7 @@ const eventProposalSchema = new mongoose.Schema(
     }],
     sponsors: [{
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Sponsor'
+      ref: 'Sponsor' // Reference to Sponsor model
     }]
   },
   {

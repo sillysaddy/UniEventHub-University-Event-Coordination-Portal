@@ -1,10 +1,11 @@
 import mongoose from "mongoose";
 
+// Schema for audit log
 const auditLogSchema = new mongoose.Schema({
   action: {
     type: String,
     required: true,
-    enum: [
+    enum: [  // Ensure action is one of the following
       'USER_CREATE',
       'USER_UPDATE',
       'USER_DELETE',
@@ -28,7 +29,7 @@ const auditLogSchema = new mongoose.Schema({
     ref: 'User'
   },
   details: {
-    type: mongoose.Schema.Types.Mixed,
+    type: mongoose.Schema.Types.Mixed, // Mixed type allows for flexible schema
     required: true
   },
   ipAddress: String,
@@ -37,7 +38,7 @@ const auditLogSchema = new mongoose.Schema({
     default: Date.now
   }
 }, {
-  timestamps: true
+  timestamps: true // Add createdAt and updatedAt fields
 });
 
 const AuditLog = mongoose.model("AuditLog", auditLogSchema);

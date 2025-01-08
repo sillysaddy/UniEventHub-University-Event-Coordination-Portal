@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-
+// Schema for role change request
 const roleChangeRequestSchema = new mongoose.Schema(
   {
     user: {

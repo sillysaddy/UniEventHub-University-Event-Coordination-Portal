@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 
+// Schema for Notification
 const notificationSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -17,8 +18,8 @@ const notificationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['announcement', 'alert', 'update'],
-    default: 'announcement'
+    enum: ['announcement', 'alert', 'update'], // enum is used to restrict the value to one of the specified values
+    default: 'announcement' // Default value
   },
   isRead: [{
     user: {

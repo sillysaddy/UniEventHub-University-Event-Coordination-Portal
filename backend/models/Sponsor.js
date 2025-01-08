@@ -1,12 +1,13 @@
 import mongoose from "mongoose";
 
+// Schema for Sponsor
 const sponsorSchema = new mongoose.Schema({
   eventProposal: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'EventProposal',
+    ref: 'EventProposal', // Reference to EventProposal model
     required: true
   },
-  sponsorName: {
+  sponsorName: { 
     type: String,
     required: true,
     trim: true
@@ -23,7 +24,7 @@ const sponsorSchema = new mongoose.Schema({
   },
   submittedBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'User', 
     required: true
   },
   reviewedBy: {
