@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 
+// Schema for EventProposal
 const eventProposalSchema = new mongoose.Schema(
   {
     title: {

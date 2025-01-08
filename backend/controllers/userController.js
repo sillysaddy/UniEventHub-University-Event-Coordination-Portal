@@ -11,8 +11,10 @@ import { logActivity } from '../utils/auditLogger.js'; // Add this import
 // Add this near the top of the file with other constants
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// This function creates a system admin user with default credentials 
 export const createSystemAdmin = async (req, res) => {
   try {
+    // Create a new system admin user
     const newUser = await User.create({
       name: "John Doe",
       email: "john@example.com", 
@@ -24,6 +26,7 @@ export const createSystemAdmin = async (req, res) => {
     // Don't send the password in response
     const { password, ...userData } = newUser._doc;
     
+    // Send a success response with the user data (excluding password)
     res.status(201).json({
       success: true,
       message: "System admin created successfully",
@@ -31,6 +34,7 @@ export const createSystemAdmin = async (req, res) => {
     });
 
   } catch (error) {
+    // IF there is an error , send a failure response with error messag
     res.status(500).json({
       success: false,
       message: "Failed to create system admin",
@@ -39,12 +43,14 @@ export const createSystemAdmin = async (req, res) => {
   }
 };
 
+// This functionr registers a new user with club_representative role in the database
 export const registerUser = async (req, res) => {
   try {
+    // Extract user details from the request body
     const { name, email, password, userId } = req.body;
     console.log("Registration attempt:", { name, email, userId }); // Log registration attempt
 
-    // Check if user already exists
+    // Check if user already exists from given email
     const userExists = await User.findOne({ email });
     if (userExists) {
       console.log("User already exists:", email);
@@ -65,7 +71,7 @@ export const registerUser = async (req, res) => {
 
     console.log("User created successfully:", newUser._id);
 
-    // Log the activity
+    // Log the activity of user creation
     await logActivity({
       action: 'USER_CREATE',
       performedBy: newUser._id,
@@ -78,15 +84,17 @@ export const registerUser = async (req, res) => {
       ipAddress: req.ip
     });
 
-    // Remove password from response
+    // Remove password from response data
     const { password: _, ...userData } = newUser._doc;
     
+    // send a success response with the user data (excluding password)
     res.status(201).json({
       success: true,
       message: "Registration successful",
       data: userData
     });
 
+    
   } catch (error) {
     console.error("Registration error:", error); // Log the error
     res.status(500).json({
@@ -97,6 +105,7 @@ export const registerUser = async (req, res) => {
   }
 };
 
+// This function handles user login by verifying email address and password
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -141,8 +150,10 @@ export const loginUser = async (req, res) => {
   }
 };
 
+// This function retrieves user profile data by user ID
 export const getUserProfile = async (req, res) => {
   try {
+    // Find user by ID and exclude password field
     const user = await User.findById(req.params.userId).select('-password');
     if (!user) {
       return res.status(404).json({
@@ -164,6 +175,7 @@ export const getUserProfile = async (req, res) => {
   }
 };
 
+// This function creates a role change request for the user
 export const createRoleRequest = async (req, res) => {
   try {
     const { userId, currentRole, requestedRole, reason } = req.body;
@@ -189,6 +201,9 @@ export const createRoleRequest = async (req, res) => {
   }
 };
 
+/**
+ * Fetches all role change requests, populates user details, and sorts them by creation date.
+ */
 export const getRoleRequests = async (req, res) => {
   try {
     const requests = await RoleChangeRequest.find()
@@ -208,11 +223,13 @@ export const getRoleRequests = async (req, res) => {
   }
 };
 
+// This function updates the status of a role change request
 export const updateRoleRequest = async (req, res) => {
   try {
     const { requestId } = req.params;
     const { status } = req.body;
 
+    //Find the role change request by ID
     const roleRequest = await RoleChangeRequest.findById(requestId);
     if (!roleRequest) {
       return res.status(404).json({
@@ -245,7 +262,7 @@ export const updateRoleRequest = async (req, res) => {
   }
 };
 
-// Add this controller function
+// This function creates a new event proposal
 export const createProposal = async (req, res) => {
   try {
     console.log("Received proposal data:", req.body); // Debug log
@@ -276,7 +293,7 @@ export const createProposal = async (req, res) => {
       });
     }
 
-    // Parse budget
+    // Parse budget and validate it
     const parsedBudget = Number(budget);
     if (isNaN(parsedBudget) || parsedBudget < 0) {
       return res.status(400).json({
@@ -285,6 +302,7 @@ export const createProposal = async (req, res) => {
       });
     }
 
+    // Create new proposal in the database
     const newProposal = await EventProposal.create({
       title: title.trim(),
       description: description.trim(),
@@ -315,7 +333,10 @@ export const createProposal = async (req, res) => {
   }
 };
 
-// Add this controller function
+
+/**
+ * Get proposals submitted by a specific user.
+ */
 export const getProposalsByUser = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -343,9 +364,9 @@ export const getProposalsByUser = async (req, res) => {
   }
 };
 
-// Add this controller function
+// This function updates an exiting event proposal
 export const updateProposal = async (req, res) => {
-  try {
+  try { 
     const { proposalId } = req.params;
     const proposal = await EventProposal.findById(proposalId);
 
@@ -409,7 +430,7 @@ export const getProposalById = async (req, res) => {
   }
 };
 
-// Add to userController.js
+
 
 // Get all pending proposals for OCA staff
 export const getPendingProposals = async (req, res) => {

@@ -6,24 +6,24 @@ const userSchema = new mongoose.Schema(
     name: {
       type: String,
       required: [true, "Name is required"],
-      trim: true,
+      trim: true, // Remove whitespace
     },
     email: {
       type: String,
       required: [true, "Email is required"],
-      unique: true,
-      lowercase: true,
+      unique: true, // Ensure Email is unique 
+      lowercase: true, // Convert email to lowercase
       trim: true,
     },
     password: {
       type: String,
-      required: [true, "Password is required"],
-      minlength: [6, "Password must be at least 6 characters"],
+      required: [true, "Password is required"], // Ensure password is required
+      minlength: [6, "Password must be at least 6 characters"], // Ensure password is at least 6 characters 
     },
     userId: {
       type: String,
       required: [true, "User ID is required"],
-      unique: true,
+      unique: true, 
     },
     role: {
       type: String,
